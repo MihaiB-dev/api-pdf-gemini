@@ -31,11 +31,6 @@ model = GenerativeModel(MODEL_ID)
 # model with system instructions
 teaching_model = GenerativeModel(
     MODEL_ID,
-    system_instruction=[
-        "You are helping in processing large documents.",
-        "Your mission is to create flashcards from the given materials.",
-        "Your purpose is to create flashcards in triviador style.",
-    ],
 )
 
 # model parameters
@@ -56,7 +51,7 @@ safety_settings = {
 }
 
 # let's try PDF document analysis
-pdf_file_uri = "gs://mds-project/Curs 02.pdf"
+pdf_file_uri = "gs://gemini_mds/Cerințe_teme_Algoritmi_Avansați_2024.pdf"
 
 prompt = """
     You are a very professional document summarization specialist.
