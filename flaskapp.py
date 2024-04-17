@@ -101,10 +101,15 @@ def generate_QA():
 
 # Function to process the uploaded PDF (replace with your actual logic)
 def process_pdf(pdf_bytes):
-    reader = PdfReader(pdf_bytes)
-    num_pages = len(reader.pages)
-    response = f"Processing PDF: {num_pages} pages (in-memory)" # Placeholder for processing
-    return response
+    try:
+        
+      reader = PdfReader(pdf_bytes)
+      num_pages = len(reader.pages)
+      response = f"Processing PDF: {num_pages} pages (in-memory)" # Placeholder for processing
+      return response
+    except Exception as e:
+        return e
+
 # main driver function
 if __name__ == '__main__':
 	app.run()
