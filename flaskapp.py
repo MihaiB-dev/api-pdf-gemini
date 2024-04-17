@@ -4,22 +4,22 @@ from PyPDF2 import PdfReader  # Example using PyPDF2 library
 LIBRARIES
 """
 
-# import base64
-# import vertexai
+import base64
+import vertexai
 
-# import IPython.display
-# from IPython.core.interactiveshell import InteractiveShell
+import IPython.display
+from IPython.core.interactiveshell import InteractiveShell
 
 # InteractiveShell.ast_node_interactivity = "all"
-# import vertexai.preview.generative_models as generative_models
+import vertexai.preview.generative_models as generative_models
 
-# from vertexai.generative_models import (
-#     GenerationConfig,
-#     GenerativeModel,
-#     HarmBlockThreshold,
-#     HarmCategory,
-#     Part,
-# )
+from vertexai.generative_models import (
+    GenerationConfig,
+    GenerativeModel,
+    HarmBlockThreshold,
+    HarmCategory,
+    Part,
+)
 
 
 # """
@@ -65,7 +65,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'pdf'}  # Allowed file extension
 
-@app.route('/', methods =['POST'])
+@app.route('/', methods =['GET','POST'])
 def generate_QA():
   if request.method == 'POST':
         # Check if a file was uploaded
@@ -102,7 +102,6 @@ def generate_QA():
 # Function to process the uploaded PDF (replace with your actual logic)
 def process_pdf(pdf_bytes):
     try:
-        
       reader = PdfReader(pdf_bytes)
       num_pages = len(reader.pages)
       response = f"Processing PDF: {num_pages} pages (in-memory)" # Placeholder for processing
