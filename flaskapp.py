@@ -20,8 +20,6 @@ from vertexai.generative_models import (
     HarmCategory,
     Part,
 )
-
-
 # """
 # #####################################
 # """

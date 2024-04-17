@@ -49,7 +49,6 @@ typing_extensions==4.11.0
 urllib3==2.2.1
 wcwidth==0.2.13
 
-
 flask==2.0.3
 gunicorn==20.0.4
 wfastcgi==3.0.0
