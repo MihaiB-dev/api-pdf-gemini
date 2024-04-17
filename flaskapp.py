@@ -80,10 +80,10 @@ def generate_QA():
         
         if file and allowed_file(file.filename):
             # Read the entire file in memory
-            pdf_bytes = file.read()
+            
             # Process the PDF bytes (e.g., use PyPDF2 or other libraries)
-            response = process_pdf(pdf_bytes)  # Replace with your processing function
-            return jsonify({'message': f"{response}"}), 200
+            response = process_pdf(file)  # Replace with your processing function
+            return jsonify({'message': f'{response}'}), 200
         else:
             return jsonify({'error': 'Invalid file type (only PDFs allowed)'}), 400
         
