@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+from PyPDF2 import PdfReader  # Example using PyPDF2 library
 """
 LIBRARIES
 """
@@ -60,19 +61,50 @@ prompt = """
 
 app = Flask(__name__)
 
-@app.route('/')
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'pdf'}  # Allowed file extension
+
+@app.route('/', methods =['POST'])
 def generate_QA():
+  if request.method == 'POST':
+        # Check if a file was uploaded
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded!'}), 400  # Return JSON with error message
+
+        file = request.files['file']
+        
+        # Validate the uploaded file
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400  # Return JSON with error message
+        
+        if file and allowed_file(file.filename):
+            # Read the entire file in memory
+            pdf_bytes = file.read()
+            # Process the PDF bytes (e.g., use PyPDF2 or other libraries)
+            response = process_pdf(pdf_bytes)  # Replace with your processing function
+            return jsonify({f'message': '{response}'}), 200
+        else:
+            return jsonify({'error': 'Invalid file type (only PDFs allowed)'}), 400
+        
+  return "Hello"     
 	# let's try PDF document analysis
-  pdf_file_uri = "gs://gemini_mds/Cerințe_teme_Algoritmi_Avansați_2024.pdf"
+  # pdf_file_uri = "gs://gemini_mds/Cerințe_teme_Algoritmi_Avansați_2024.pdf"
 
-  pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
-  contents = [pdf_file, prompt]
+  # pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
+  # contents = [pdf_file, prompt]
 
-  response = model.generate_content(contents)
+  # response = model.generate_content(contents)
   # print(response.text)
 
-  return jsonify(response.text)
+  # return jsonify(response.text)
 
+# Function to process the uploaded PDF (replace with your actual logic)
+def process_pdf(pdf_bytes):
+    reader = PdfReader(pdf_bytes)
+    num_pages = len(reader.pages)
+    response = f"Processing PDF: {num_pages} pages (in-memory)" # Placeholder for processing
+    return response
 # main driver function
 if __name__ == '__main__':
 	app.run()
