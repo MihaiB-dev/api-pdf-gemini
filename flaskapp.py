@@ -4,14 +4,14 @@ from PyPDF2 import PdfReader  # Example using PyPDF2 library
 LIBRARIES
 """
 
-import base64
-import vertexai
+# import base64
+# import vertexai
 
-import IPython.display
+# import IPython.display
 from IPython.core.interactiveshell import InteractiveShell
 
 # InteractiveShell.ast_node_interactivity = "all"
-import vertexai.preview.generative_models as generative_models
+# import vertexai.preview.generative_models as generative_models
 
 from vertexai.generative_models import (
     GenerationConfig,
