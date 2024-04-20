@@ -1,3 +1,9 @@
+import os
+import sys
+
+# virtualenv_path = os.environ.get("/home/mihai/api-pdf-gemini/secrets")
+# sys.path.append(virtualenv_path)
+
 from flask import Flask, jsonify, request
 from PyPDF2 import PdfReader  # Example using PyPDF2 library
 import re
