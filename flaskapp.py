@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request
 from PyPDF2 import PdfReader  # Example using PyPDF2 library
+import re
+from google.cloud import storage
 """
 LIBRARIES
 """
@@ -20,41 +22,49 @@ from vertexai.generative_models import (
     HarmCategory,
     Part,
 )
-# """
-# #####################################
-# """
+"""
+#####################################
+"""
 
 
-# MODEL_ID = "gemini-1.5-pro-preview-0409"
-# model = GenerativeModel(MODEL_ID)
+MODEL_ID = "gemini-1.5-pro-preview-0409"
+model = GenerativeModel(MODEL_ID)
 
-# # model with system instructions
-# teaching_model = GenerativeModel(
-#     MODEL_ID,
-# )
+# model with system instructions
+teaching_model = GenerativeModel(
+    MODEL_ID,
+)
 
-# # model parameters
-# generation_config = GenerationConfig(
-#     temperature=1,
-#     top_p=1.0,
-#     top_k=32,
-#     candidate_count=1,
-#     max_output_tokens=8192,
-# )
+# model parameters
+generation_config = GenerationConfig(
+    temperature=1,
+    top_p=1.0,
+    top_k=32,
+    candidate_count=1,
+    max_output_tokens=8192,
+)
 
-# # safety settings
-# safety_settings = {
-#     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-#     HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-#     HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-#     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-# }
+# safety settings
+safety_settings = {
+    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+}
 
 
-# prompt = """
-#     You are a very professional document summarization specialist.
-#     Please create flashcards of the given document in Triviador style.
-# """
+prompt = """
+    You are a teacher preparing questions for a quiz. Given the following document, please generate 10 multiple-choice questions (MCQs) with 4 options and a corresponding
+answer letter based on the document. Make the questions such that the answers aren't the same letter for every question. Make at least 3 questions multiple choice.
+Make questions with longer answers, that does not include names.
+Example question, use only the structure below to give the response:
+Question: question here
+CHOICE_A: choice here
+CHOICE_B: choice here
+CHOICE_C: choice here
+CHOICE_D: choice here
+Answer: A or B or C or D or combined (if it is multiple choice)
+"""
 
 
 app = Flask(__name__)
@@ -80,22 +90,16 @@ def generate_QA():
             # Read the entire file in memory
             
             # Process the PDF bytes (e.g., use PyPDF2 or other libraries)
-            response = process_pdf(file)  # Replace with your processing function
-            return jsonify({'message': f'{response}'}), 200
+            #response = process_pdf(file)  # Replace with your processing function
+                
+              response = make_quiz(file)
+              return jsonify(parse_quiz_text(response)), 200
         else:
             return jsonify({'error': 'Invalid file type (only PDFs allowed)'}), 400
         
   return "Hello"     
 	# let's try PDF document analysis
-  # pdf_file_uri = "gs://gemini_mds/Cerințe_teme_Algoritmi_Avansați_2024.pdf"
 
-  # pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
-  # contents = [pdf_file, prompt]
-
-  # response = model.generate_content(contents)
-  # print(response.text)
-
-  # return jsonify(response.text)
 
 # Function to process the uploaded PDF (replace with your actual logic)
 def process_pdf(pdf_bytes):
@@ -108,6 +112,88 @@ def process_pdf(pdf_bytes):
         return e
     
 
+def upload_to_gcs(bucket_name, pdf_bytes, destination_blob_name, credentials_file):
+    # Initialize the Google Cloud Storage client with the credentials
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_string(pdf_bytes, content_type="application/pdf")
+    
+
+def delete_from_gcs(bucket_name, blob_name, credentials_file):
+    """Deletes a blob from the specified bucket in GCS."""
+    storage_client = storage.Client.from_service_account_json(credentials_file)
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.delete()
+  
+def make_quiz(pdf_bytes):
+    try:
+      name = pdf_bytes.filename
+      pdf_bytes = pdf_bytes.read()
+      # reader = PdfReader(pdf_bytes)
+      BUCKET_NAME = "gemini_mds"
+      DESTINATION_BLOB_NAME = name
+      CREDENTIALS_FILE = "/home/mihai/api-pdf-gemini/storage_credentials.json"
+      #"/home/mihai/Admin/Desktop/Gemini-AI/api-pdf-gemini/storage_credentials.json"
+      upload_to_gcs(BUCKET_NAME, pdf_bytes, DESTINATION_BLOB_NAME, CREDENTIALS_FILE)
+      pdf_file_uri = "gs://gemini_mds/" + name
+
+      pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
+      contents = [pdf_file, prompt]
+
+      response = model.generate_content(contents)
+      delete_from_gcs(BUCKET_NAME, DESTINATION_BLOB_NAME, CREDENTIALS_FILE)
+
+      return response.text
+    
+    except Exception as e:
+        return e
+        
+def parse_quiz_text(text):
+  """
+  Parses quiz text into a JSON object.
+  Returns a dictionary representing the quiz structure.
+  """
+  quiz_data = {"questions": []}
+
+  # Split text by empty lines to separate questions and answer sections
+  question_answer_blocks = text.strip().split("\n\n")
+
+  for block in question_answer_blocks:
+    lines = block.splitlines()  # Split block into lines
+
+    # Extract question text (first line)
+    question_text = lines[0]
+
+    current_question_data = {"question": question_text.strip(), "choices": {}, "answer": None}
+
+    # Capture choices (assuming first 4 lines after question are choices)
+    for choice_line in lines[1:5]:  # Process first 4 lines after question
+      choice_match = re.match(r"CHOICE_([A-Z]): (.*?)$", choice_line)
+      if choice_match:
+        choice_letter = choice_match.group(1)
+        choice_text = choice_match.group(2).strip()
+        current_question_data["choices"][choice_letter] = choice_text
+
+    # Extract answer (assuming answer line starts with "Answer:")
+    answer_line = None
+    for line in lines:
+      if line.lower().startswith("answer:"):  # Check for answer line (case-insensitive)
+        answer_line = line.strip()
+        break  # Stop processing lines after finding answer line
+
+    # Process answer line if found
+    if answer_line:
+      answer = answer_line.split(":")[1].strip()  # Extract answer after colon
+      if "," in answer:  # Check for multiple answer format (comma-separated)
+        answer = answer.split(",")
+      current_question_data["answer"] = answer
+
+    quiz_data["questions"].append(current_question_data)
+
+  return quiz_data
+   
 # main driver function
 if __name__ == '__main__':
 	app.run(host='0.0.0.0',port='8888')
