@@ -1,0 +1,19 @@
+name: Auto Pull on Server Branch
+
+on:
+  push:
+    branches:
+      - server  # Change this to the branch you want to auto-deploy
+  workflow_dispatch:  # This adds a manual trigger
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # This will run on your self-hosted runner
+
+    steps:
+      - name: Pull latest code on server branch
+        run: |
+          cd /home/unchiipecos/api-pdf-gemini  # Replace with the actual path to your repository
+          git fetch origin server
+          git reset --hard origin/server
+          sudo systemctl restart flask_gunicorn  # Optional: restart the Gunicorn service
