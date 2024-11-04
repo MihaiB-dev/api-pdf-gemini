@@ -27,7 +27,7 @@ pip install wheel flask gunicorn
 # Creating WSGI entry point
 echo "Creating WSGI entry point..."
 cat > $APP_DIR/wsgi.py <<EOL
-from app import app
+from flaskapp import app
 
 if __name__ == "__main__":
     app.run()
