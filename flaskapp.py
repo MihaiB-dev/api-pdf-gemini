@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from PyPDF2 import PdfReader  # Example using PyPDF2 library
 import re
 from google.cloud import storage
+
+import os
 """
 LIBRARIES
 """
@@ -132,12 +134,13 @@ def make_quiz(pdf_bytes):
       name = pdf_bytes.filename
       pdf_bytes = pdf_bytes.read()
       # reader = PdfReader(pdf_bytes)
-      BUCKET_NAME = "gemini_mds"
+      BUCKET_NAME = "unchiipecos"
       DESTINATION_BLOB_NAME = name
-      CREDENTIALS_FILE = "/home/mihai/api-pdf-gemini/storage_credentials.json"
+      current_dir = os.path.dirname(os.path.abspath(__file__))
+      CREDENTIALS_FILE = os.path.join(current_dir, "storage_credentials.json")
       #"/home/mihai/Admin/Desktop/Gemini-AI/api-pdf-gemini/storage_credentials.json"
       upload_to_gcs(BUCKET_NAME, pdf_bytes, DESTINATION_BLOB_NAME, CREDENTIALS_FILE)
-      pdf_file_uri = "gs://gemini_mds/" + name
+      pdf_file_uri = "gs://unchiipecos/" + name
 
       pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
       contents = [pdf_file, prompt]
