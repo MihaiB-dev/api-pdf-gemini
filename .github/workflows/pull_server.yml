@@ -16,4 +16,15 @@ jobs:
           cd /home/unchiipecos/api-pdf-gemini  # Replace with the actual path to your repository
           git fetch origin server
           git reset --hard origin/server
+          
+      - name: Run dependencies and update them
+        run: |
+          cd /home/unchiipecos/api-pdf-gemini
+          source venv/bin/activate
+          pip freeze > requirements.txt  # Update requirements.txt with the latest dependencies
+          pip install -r requirements.txt
+          deactivate
+        
+      - name: Restart server
+        run: |
           sudo systemctl restart flask_gunicorn  # Optional: restart the Gunicorn service
