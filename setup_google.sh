@@ -20,4 +20,7 @@ sudo apt-get update && sudo apt-get install google-cloud-cli;
 echo "Run gcloud init to get started..."
 gcloud init;
 
+echo "Download vertexai"
+pip install vertexai
+
 echo "Done."
