@@ -1,7 +1,6 @@
 """
 LIBRARIES
 """
-
 # import base64
 # import vertexai
 
@@ -25,7 +24,7 @@ from vertexai.generative_models import (
 """
 
 
-MODEL_ID = "gemini-1.5-pro-preview-0409"
+MODEL_ID = "gemini-1.5-flash-002"
 model = GenerativeModel(MODEL_ID)
 
 # model with system instructions
@@ -94,7 +93,7 @@ def parse_quiz_text(text):
 
   return quiz_data
 # let's try PDF document analysis
-pdf_file_uri = "gs://gemini_mds/Fully_Homomorphic_Encryption.pdf"
+pdf_file_uri = "gs://unchiipecos/Curs_6-1.pdf"
 
 # You are a very professional document summarization specialist.
 # Please create flashcards of the given document in Triviador style.

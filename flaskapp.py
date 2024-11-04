@@ -29,7 +29,7 @@ from vertexai.generative_models import (
 """
 
 
-MODEL_ID = "gemini-1.5-pro-preview-0409"
+MODEL_ID = "gemini-1.5-flash-002"
 model = GenerativeModel(MODEL_ID)
 
 # model with system instructions
