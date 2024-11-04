@@ -99,7 +99,7 @@ def generate_QA():
         else:
             return jsonify({'error': 'Invalid file type (only PDFs allowed)'}), 400
         
-  return "Hello"     
+  return "Hello, this is the API for FMInatorul"     
 	# let's try PDF document analysis
 
 
